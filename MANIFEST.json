@@ -1,0 +1,125 @@
+{
+  "name": "MetaSift",
+  "version": "0.3.0",
+  "artifact_type": "source project",
+  "created": "2026-08-08",
+  "entry_points": [
+    "metasift CLI",
+    "metasift.inspect_file",
+    "metasift.plan_file",
+    "metasift.clean_file",
+    "metasift.verify_file",
+    "metasift.inspect_provenance",
+    "metasift.rebuild_image"
+  ],
+  "runtime": {
+    "python": ">=3.11",
+    "required_dependencies": [
+      "Pillow>=12.3,<13"
+    ],
+    "optional_dependencies": {
+      "audio": ["mutagen>=1.47,<2"],
+      "c2pa": ["c2pa-python>=0.37,<0.38"]
+    }
+  },
+  "policies": [
+    "share-safe",
+    "privacy",
+    "workflow",
+    "provenance",
+    "metadata-max",
+    "custom",
+    "ai (legacy)",
+    "full (legacy)"
+  ],
+  "native_formats": [
+    "PNG",
+    "JPEG",
+    "WebP",
+    "RIFF WAV/AVI",
+    "GIF",
+    "OOXML DOCX/XLSX/PPTX",
+    "MP3"
+  ],
+  "image_rebuild": {
+    "inputs": ["JPEG", "PNG", "WebP", "AVIF when supported by Pillow"],
+    "outputs": ["same", "JPEG", "PNG", "WebP", "AVIF when supported by Pillow"],
+    "defaults": {
+      "output_format": "same",
+      "jitter": 0,
+      "preserve_icc": true,
+      "preserve_alpha_when_supported": true
+    }
+  },
+  "security_controls": [
+    "bounded total file size",
+    "bounded metadata expansion and entry size",
+    "bounded chunk count",
+    "bounded PNG compressed-text expansion",
+    "bounded OOXML ZIP entry count, entry size, aggregate expansion and compression ratio",
+    "bounded XML size and DTD/entity rejection",
+    "bounded image pixel count",
+    "fail-closed unsupported sanitization",
+    "atomic output replacement",
+    "native post-condition verification before output commit"
+  ],
+  "verification_backends": {
+    "native": "required",
+    "ExifTool": "optional independent metadata oracle",
+    "Pillow": "image observation",
+    "Mutagen": "audio/ID3 observation",
+    "c2pa-python": "official C2PA validation"
+  },
+  "validation": [
+    {
+      "command": "sh scripts/check.sh",
+      "result": "50 passed; 90.25% statement coverage; compileall passed",
+      "status": "passed"
+    },
+    {
+      "command": "python -m build",
+      "result": "blocked before project build because the session package index exposes no 'build' distribution and the runtime did not already contain the module",
+      "status": "environment_blocked"
+    },
+    {
+      "command": "python -m pip wheel --no-deps --no-build-isolation . -w dist",
+      "result": "metasift-0.3.0-py3-none-any.whl built and inspected; version and optional dependency metadata are correct",
+      "status": "passed"
+    },
+    {
+      "command": "install wheel into an isolated --target directory and execute inspect/plan/sanitize/verify/image-rebuild",
+      "result": "MetaSift 0.3.0 imported from the installed wheel; share-safe removed two test metadata entries; verify returned clean; PNG rebuild preserved PNG, alpha, and zero-jitter default",
+      "status": "passed"
+    },
+    {
+      "command": "install wheel plus dependencies in a completely empty venv",
+      "result": "blocked by this session's package index: Pillow distributions are unavailable; a nested --system-site-packages venv also did not inherit Pillow from the parent runtime",
+      "status": "environment_blocked"
+    }
+  ],
+  "validation_platform": {
+    "os": "Linux 6.18.35 x86_64 glibc 2.41",
+    "python": "3.13.5",
+    "Pillow": "12.3.0",
+    "Mutagen": "1.47.0",
+    "pytest": "9.0.2",
+    "pytest-cov": "7.0.0",
+    "optional_backends_observed": {
+      "c2pa-python": false,
+      "ExifTool": false,
+      "ffprobe": true,
+      "ffmpeg": true
+    }
+  },
+  "known_limitations": [
+    "Metadata sanitization cannot guarantee that a file will not be classified as AI-generated.",
+    "SynthID and other signal-level or steganographic watermarks are outside the metadata sanitizer and are not claimed removed.",
+    "C2PA is general provenance, not AI-specific; removing it can destroy legitimate authenticity credentials.",
+    "Native post-condition verification shares parser logic with mutation; independent backends reduce but cannot eliminate common-mode blind spots.",
+    "The engine applies a finite file-size budget but still reads budget-compliant native files into memory rather than streaming them.",
+    "OOXML hidden content is inventoried but not destructively removed in 0.3.0.",
+    "ISO-BMFF/HEIC/HEIF/MP4/MOV/M4A, PDF, TIFF/DNG and several other C2PA-capable formats are not native sanitization targets yet.",
+    "Animated or multi-frame raster rebuilds fail closed.",
+    "Cross-platform runtime validation was not performed locally; CI is configured for Python 3.11, 3.12 and 3.13 on Ubuntu."
+  ]
+}

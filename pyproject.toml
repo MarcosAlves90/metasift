@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "metasift"
+version = "0.3.0"
+description = "Local-first metadata, privacy, workflow, and provenance inspection and sanitization."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["Pillow>=12.3,<13"]
+license = { text = "MIT" }
+authors = [{ name = "MetaSift contributors" }]
+keywords = ["metadata", "privacy", "c2pa", "exif", "xmp", "provenance", "sanitization"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Security",
+  "Topic :: Utilities",
+]
+
+[project.scripts]
+metasift = "metasift.cli:main"
+
+[project.optional-dependencies]
+audio = ["mutagen>=1.47,<2"]
+c2pa = ["c2pa-python>=0.37,<0.38"]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "build>=1.2",
+  "mutagen>=1.47,<2",
+]
+all = [
+  "mutagen>=1.47,<2",
+  "c2pa-python>=0.37,<0.38",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --strict-config"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+branch = false
+source = ["metasift"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 90
+omit = ["src/metasift/__main__.py"]
