@@ -15,7 +15,8 @@
   "runtime": {
     "python": ">=3.11",
     "required_dependencies": [
-      "Pillow>=12.3,<13"
+      "Pillow>=12.3,<13",
+      "pypdf>=5.9,<7"
     ],
     "optional_dependencies": {
       "audio": ["mutagen>=1.47,<2"],
@@ -38,7 +39,10 @@
     "WebP",
     "RIFF WAV/AVI",
     "GIF",
-    "OOXML DOCX/XLSX/PPTX",
+    "JSON metadata containers",
+    "Markdown YAML/TOML front matter",
+    "PDF Info/XMP metadata",
+    "Office OPC core/custom properties (DOCX/DOCM/DOTX/DOTM, XLSX/XLSM/XLSB/XLTX/XLTM/XLAM, PPTX/PPTM/POTX/POTM/PPSX/PPSM/PPAM)",
     "MP3"
   ],
   "image_rebuild": {
@@ -58,6 +62,9 @@
     "bounded PNG compressed-text expansion",
     "bounded OOXML ZIP entry count, entry size, aggregate expansion and compression ratio",
     "bounded XML size and DTD/entity rejection",
+    "bounded JSON/Markdown input before UTF-8 parsing",
+    "fail-closed encrypted PDF sanitization",
+    "refuse rewrites of PDFs with recognized digital signatures",
     "bounded image pixel count",
     "fail-closed unsupported sanitization",
     "atomic output replacement",
@@ -73,7 +80,7 @@
   "validation": [
     {
       "command": "sh scripts/check.sh",
-      "result": "50 passed; 90.25% statement coverage; compileall passed",
+      "result": "79 passed; 93.61% statement coverage; compileall passed",
       "status": "passed"
     },
     {
@@ -117,8 +124,9 @@
     "C2PA is general provenance, not AI-specific; removing it can destroy legitimate authenticity credentials.",
     "Native post-condition verification shares parser logic with mutation; independent backends reduce but cannot eliminate common-mode blind spots.",
     "The engine applies a finite file-size budget but still reads budget-compliant native files into memory rather than streaming them.",
-    "OOXML hidden content is inventoried but not destructively removed in 0.3.0.",
-    "ISO-BMFF/HEIC/HEIF/MP4/MOV/M4A, PDF, TIFF/DNG and several other C2PA-capable formats are not native sanitization targets yet.",
+    "OOXML hidden content is inventoried but not destructively removed.",
+    "PDF sanitization covers Info/XMP metadata only; encrypted PDFs fail closed and PDFs with recognized digital signatures are not rewritten.",
+    "ISO-BMFF/HEIC/HEIF/MP4/MOV/M4A, TIFF/DNG and several other C2PA-capable formats are not native sanitization targets yet.",
     "Animated or multi-frame raster rebuilds fail closed.",
     "Cross-platform runtime validation was not performed locally; CI is configured for Python 3.11, 3.12 and 3.13 on Ubuntu."
   ]

@@ -41,7 +41,7 @@ python -m pip install -e '.[c2pa]'    # official c2pa-python validation
 python -m pip install -e '.[all]'
 ```
 
-ExifTool is detected automatically when installed on the system and is used as an independent verification oracle. `ffprobe`/`ffmpeg` are reported by `doctor` but are not yet mutation backends in 0.3.0.
+ExifTool is detected automatically when installed on the system and is used as an independent verification oracle. `ffprobe`/`ffmpeg` are reported by `doctor` but are not yet mutation backends in 0.4.0.
 
 For development:
 
@@ -85,6 +85,15 @@ metasift sanitize photo.jpg \
   --remove exif.GPS.GPSLongitude
 ```
 
+Document metadata uses the same policy engine:
+
+```bash
+metasift inspect report.pdf
+metasift sanitize report.pdf --preset share-safe
+metasift sanitize notes.md --preset privacy
+metasift sanitize payload.json --preset workflow
+```
+
 `--keep` always wins over a preset or explicit `--remove` selector.
 
 Verify the output:
@@ -117,7 +126,7 @@ metasift formats --json
 ## Policies
 
 | Policy | Removes privacy | Removes AI workflow | Removes provenance | Notes |
-|---|---:|---:|---:|---|
+| --- | ---: | ---: | ---: | --- |
 | `share-safe` | Yes | Yes | No | Recommended default for ordinary sharing. |
 | `privacy` | Yes | No | No | Personal/location/device data only. |
 | `workflow` | No | Yes | No | Prompt/generator/workflow evidence only. |
@@ -132,13 +141,16 @@ metasift formats --json
 ## Supported native sanitization
 
 | Format | Inspection | Sanitization | Important guarantees / limits |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | JPEG/JPG | Field-level EXIF/XMP + structural APP metadata | Yes | JPEG scan data is preserved; contiguous APP11 C2PA/JUMBF runs are handled together. |
 | PNG | Field-level eXIf + chunk/text metadata | Yes | IDAT chunks are preserved; compressed metadata expansion is bounded. |
 | WebP | EXIF/XMP/ICC/C2PA RIFF chunks | Yes | VP8X feature flags are updated after removals; media chunks are preserved. |
 | WAV/AVI RIFF | Chunk-level | Yes | Known metadata chunks only. |
 | GIF | Extension-level | Yes | Unknown application extensions are preserved; C2PA/XMP/comments can be removed. |
-| DOCX/XLSX/PPTX | Core/custom properties + hidden-content inventory | Partial | 0.3.0 sanitizes core/custom properties; hidden content is reported but not destructively removed. |
+| JSON | Fields inside top-level `metadata`, `_metadata`, or `_meta` objects | Yes | UTF-8 only; application data outside explicit metadata containers is preserved. |
+| Markdown | YAML (`---`) and TOML (`+++`) front matter | Yes | UTF-8 only; body content is preserved. `metadata-max` can remove the complete recognized front-matter block. |
+| PDF | Info dictionary + XMP + digital-signature inventory | Yes | Uses `pypdf`; encrypted PDFs and signed PDFs are not rewritten. Page objects are cloned, but PDF container bytes are rewritten. |
+| Office Open XML / OPC | Core/custom properties + hidden-content inventory | Partial | Supports `.docx`, `.docm`, `.dotx`, `.dotm`, `.xlsx`, `.xlsm`, `.xlsb`, `.xltx`, `.xltm`, `.xlam`, `.pptx`, `.pptm`, `.potx`, `.potm`, `.ppsx`, `.ppsm`, and `.ppam`. Hidden content is reported but not destructively removed. |
 | MP3 | ID3 frame-level with Mutagen; container fallback | Yes | MPEG audio payload is preserved. |
 | Other formats | Warning | No | Sanitization fails closed. |
 
@@ -184,7 +196,7 @@ metasift image-batch ./images --recursive --output-dir ./rebuilt --to same
 
 ## Security model
 
-Input files are untrusted. MetaSift 0.3.0 applies centralized resource budgets for:
+Input files are untrusted. MetaSift 0.4.0 applies centralized resource budgets for:
 
 - total file bytes;
 - metadata bytes and individual metadata entries;
@@ -192,7 +204,10 @@ Input files are untrusted. MetaSift 0.3.0 applies centralized resource budgets f
 - PNG compressed metadata expansion;
 - OOXML ZIP entry count, per-entry expansion, aggregate expansion and compression ratio;
 - XML size and entity/DTD rejection;
+- JSON/Markdown document size before UTF-8 parsing;
 - image pixel count.
+
+PDF parsing is delegated to the required `pypdf` dependency. Encrypted PDFs fail closed, and PDFs with recognized digital-signature fields are never rewritten because sanitization would invalidate their signatures.
 
 Writes use sibling temporary files plus atomic replacement. Originals are not overwritten unless `--in-place` is explicitly requested. Unsupported sanitization never copies a file unchanged and reports success.
 
@@ -221,7 +236,7 @@ Inspection, plan, sanitization, verification, provenance and image-rebuild repor
 
 The schema marker allows integrations to detect future breaking report changes rather than scraping human-readable output.
 
-## Deliberate non-goals in 0.3.0
+## Deliberate non-goals in 0.4.0
 
 - SynthID or other signal-level watermark removal.
 - AI-classifier or perceptual-hash evasion guarantees.

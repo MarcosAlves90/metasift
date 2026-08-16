@@ -13,10 +13,15 @@ from .common import make_entry
 
 _CORE = "docProps/core.xml"
 _CUSTOM = "docProps/custom.xml"
+_OOXML_SUFFIXES = {
+    ".docx", ".docm", ".dotx", ".dotm",
+    ".xlsx", ".xlsm", ".xlsb", ".xltx", ".xltm", ".xlam",
+    ".pptx", ".pptm", ".potx", ".potm", ".ppsx", ".ppsm", ".ppam",
+}
 
 
 def matches(data: bytes, path_suffix: str = "") -> bool:
-    if path_suffix.casefold() not in {".docx", ".xlsx", ".pptx"}:
+    if path_suffix.casefold() not in _OOXML_SUFFIXES:
         return False
     return data.startswith(b"PK\x03\x04")
 
@@ -66,7 +71,7 @@ def _property_entries(archive: zipfile.ZipFile, budget: ResourceBudget) -> list[
     names = set(archive.namelist())
     if _CORE in names:
         root = ET.fromstring(_read_xml(archive, _CORE, budget))
-        for child in list(root):
+        for child in root:
             value = "" if child.text is None else child.text
             key = _local(child.tag)
             entries.append(
@@ -82,7 +87,7 @@ def _property_entries(archive: zipfile.ZipFile, budget: ResourceBudget) -> list[
             )
     if _CUSTOM in names:
         root = ET.fromstring(_read_xml(archive, _CUSTOM, budget))
-        for prop in list(root):
+        for prop in root:
             key = prop.attrib.get("name", "custom-property")
             value = "".join(prop.itertext())
             entries.append(
@@ -145,7 +150,7 @@ def _clean_xml(
     root = ET.fromstring(raw)
     removed: list[MetadataEntry] = []
     kept: list[MetadataEntry] = []
-    for child in list(root):
+    for child in tuple(root):
         if custom:
             key = child.attrib.get("name", "custom-property")
             value = "".join(child.itertext())

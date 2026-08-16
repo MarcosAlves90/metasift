@@ -95,9 +95,23 @@ The generic RIFF adapter handles known top-level metadata chunks and excludes We
 
 The parser removes recognized comment/XMP/C2PA extensions but preserves unknown application extensions because they may affect animation/rendering.
 
-### OOXML
+### JSON documents
 
-ZIP packages are bounded before decompression. Path traversal, encryption, excessive entries, excessive expansion, suspicious compression ratios, oversized XML and DTD/entity declarations are rejected. Core/custom properties are sanitizable. Comments, custom XML, embedded objects, macros, notes and similar hidden package content are inventory-only in 0.3.0 because deleting them can alter document semantics.
+The JSON adapter accepts UTF-8 `.json` documents and deliberately treats metadata as opt-in structure rather than guessing from arbitrary application fields. Only top-level `metadata`, `_metadata`, and `_meta` containers are inspected. Dictionary fields become field-level `MetadataEntry` records; non-object metadata containers are exposed as a single removable entry. A mutation preserves BOM/newline behavior and JSON values, although formatting is normalized when a rewrite is required. Non-object JSON documents are left unchanged.
+
+### Markdown
+
+The Markdown adapter supports UTF-8 `.md`, `.markdown`, `.mdown`, `.mkd`, and `.mkdn` documents with YAML (`---`) or TOML (`+++`) front matter. Parsing is line-oriented and bounded by the centralized file-size budget. Recognized top-level front-matter fields are sanitized independently when possible; the body is preserved. `metadata-max`/`full` can remove the complete recognized front-matter block, including cases where not every top-level line can be represented safely as an individual field.
+
+### PDF
+
+PDF parsing and rewriting use the required `pypdf` dependency. The adapter exposes the Info dictionary and XMP as field-level metadata and inventories recognized digital-signature fields as non-removable provenance evidence. Encrypted PDFs fail closed. PDFs with recognized signatures are inspectable but are never rewritten because any sanitization rewrite would invalidate those signatures. For unsigned PDFs, pages/document objects are cloned while metadata is rewritten; byte-for-byte PDF container preservation is not promised. Deep content disarm/reconstruction remains a separate non-goal.
+
+### OOXML / OPC office packages
+
+ZIP packages are bounded before decompression. Path traversal, encryption, excessive entries, excessive expansion, suspicious compression ratios, oversized XML and DTD/entity declarations are rejected. Core/custom properties are sanitizable for the supported document, spreadsheet, template, macro, add-in, slideshow, and presentation suffixes. Comments, custom XML, embedded objects, macros, notes and similar hidden package content remain inventory-only because deleting them can alter document semantics.
+
+Supported suffixes are `.docx`, `.docm`, `.dotx`, `.dotm`, `.xlsx`, `.xlsm`, `.xlsb`, `.xltx`, `.xltm`, `.xlam`, `.pptx`, `.pptm`, `.potx`, `.potm`, `.ppsx`, `.ppsm`, and `.ppam`. Adapter selection still requires a ZIP/OPC signature; a matching extension alone is not treated as a valid Office package.
 
 ### MP3
 
@@ -146,4 +160,4 @@ Machine-readable results use schema version `1.0`.
 
 ## Architectural non-goals for 0.3
 
-No distributed services, database, plugin framework, GUI, vendor cloud dependency, PDF CDR, BMFF mutation, or generic “support every format” abstraction. New backends should be introduced only when they solve an observed format/verification requirement.
+No distributed services, database, plugin framework, GUI, vendor cloud dependency, PDF content-disarm/reconstruction pipeline, BMFF mutation, or generic “support every format” abstraction. New backends should be introduced only when they solve an observed format/verification requirement.

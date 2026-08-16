@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 - 2026-08-15
+
+- Add field-level JSON metadata inspection and sanitization for top-level `metadata`, `_metadata`, and `_meta` containers while preserving ordinary application data.
+- Add YAML/TOML Markdown front-matter inspection and sanitization for `.md`, `.markdown`, `.mdown`, `.mkd`, and `.mkdn`, preserving the document body.
+- Add PDF Info/XMP metadata inspection and sanitization through `pypdf`, with digital-signature inventory and fail-closed behavior for encrypted or signed PDFs.
+- Expand Office package selection beyond `.docx`, `.xlsx`, and `.pptx` to macro/template/add-in/slideshow variants while retaining core/custom-property-only sanitization.
+- Apply centralized file-size budgets to JSON and Markdown adapters and simplify front-matter parsing to avoid regex backtracking.
+- Add regression and end-to-end coverage for the new document formats while retaining the project's 90% coverage gate.
+
 ## 0.3.0 - 2026-08-08
 
 - Separate privacy, AI workflow, provenance, technical metadata, and hidden-content evidence instead of treating every signal as equivalent.

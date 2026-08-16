@@ -1,6 +1,6 @@
 # Research notes: metadata, AI provenance, sanitization and verification
 
-Last reviewed: 2026-08-08.
+Last reviewed: 2026-08-15.
 
 This document records the mechanisms that materially shaped MetaSift 0.3. It is not a claim that every format or provenance technology below is fully implemented.
 
@@ -123,9 +123,21 @@ Source:
 
 MetaSift 0.3 inventories several hidden-content classes but does not automatically remove them. Deleting comments/revisions or embedded content can change the meaning of a document and requires a separate destructive contract.
 
-## 10. Resource exhaustion
+## 10. Structured-text document metadata
 
-Compressed metadata and archive formats create denial-of-service risk. Pillow documents decompression-bomb protections and limits for compressed PNG text; ZIP-based OOXML also requires explicit expansion budgets.
+JSON and Markdown require a conservative definition of what counts as metadata because arbitrary keys can be ordinary application or document content. MetaSift therefore does not remove fields merely because their names look privacy- or AI-related. JSON inspection is restricted to explicit top-level `metadata`, `_metadata`, and `_meta` containers. Markdown inspection is restricted to YAML/TOML front matter, with the body treated as content rather than metadata.
+
+This keeps the sanitizer's authority narrow: policy decides which recognized metadata entries to remove, while format adapters decide where metadata is structurally allowed to exist.
+
+## 11. PDF metadata versus document reconstruction
+
+PDF metadata sanitization and PDF content disarm are separate operations. MetaSift now handles the PDF Info dictionary and XMP metadata through `pypdf`, but does not claim to sanitize embedded files, JavaScript, annotations, forms, hidden layers, or other active/content-level structures.
+
+Digital signatures are also a separate integrity mechanism. Rewriting a signed PDF invalidates its signature, so MetaSift inventories recognized signature fields and refuses sanitization of signed files. Encrypted PDFs likewise fail closed rather than attempting an unauthenticated rewrite.
+
+## 12. Resource exhaustion
+
+Compressed metadata and archive formats create denial-of-service risk. Pillow documents decompression-bomb protections and limits for compressed PNG text; ZIP-based OOXML also requires explicit expansion budgets. Structured-text adapters apply the same centralized file-size boundary before decoding.
 
 Sources:
 
@@ -134,7 +146,7 @@ Sources:
 
 MetaSift centralizes file, metadata, chunk, ZIP, XML and image-pixel limits in `ResourceBudget`.
 
-## 11. Remaining roadmap
+## 13. Remaining roadmap
 
 Highest-value work not included in 0.3:
 
@@ -143,7 +155,7 @@ Highest-value work not included in 0.3:
 3. ISO-BMFF base parser for AVIF/HEIC/HEIF/MP4/MOV/M4A C2PA and metadata;
 4. richer IPTC/XMP round-trip semantics;
 5. FLAC/OGG/audio expansion;
-6. PDF metadata scrub and a separately named deep content-disarm/reconstruction mode;
+6. a separately named PDF deep content-disarm/reconstruction mode;
 7. OOXML destructive hidden-content transformations with explicit semantic-impact policies;
 8. TIFF/DNG read-only inspection before any rewriting support;
 9. optional fidelity metrics/oracles for rebuild operations.

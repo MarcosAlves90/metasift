@@ -13,7 +13,7 @@
 
 - Every input file is untrusted binary data.
 - ZIP members, XML, compressed PNG text and metadata lengths are attacker-controlled.
-- Pillow, Mutagen and optional c2pa-python are third-party parser boundaries.
+- Pillow, Mutagen, required `pypdf`, and optional c2pa-python are third-party parser boundaries.
 - ExifTool is an optional external process invoked without a shell and with a timeout.
 - Output paths are caller-controlled local filesystem destinations.
 - MetaSift performs no network access in normal operation.
@@ -56,6 +56,18 @@ Mitigation: unsafe member paths and encryption are rejected. MetaSift does not e
 ### XML entity/DTD expansion
 
 Mitigation: metadata XML containing DTD/entity declarations is rejected and XML byte size is bounded.
+
+### Structured-text parser exhaustion
+
+Mechanism: oversized JSON or Markdown input can consume memory during UTF-8 decoding, JSON parsing, or front-matter scanning.
+
+Mitigation: JSON and Markdown adapters enforce the centralized file-size budget before decoding. Markdown front-matter parsing is line-oriented rather than based on backtracking regular expressions.
+
+### Encrypted or digitally signed PDF rewrite
+
+Mechanism: encrypted PDFs cannot be safely inspected without decryption context, while rewriting a digitally signed PDF invalidates the signature and can create a misleading output.
+
+Mitigation: encrypted PDFs fail closed. Recognized PDF signature fields are reported as non-removable provenance evidence, and sanitization refuses to rewrite signed PDFs.
 
 ### Parser confusion / truncated containers
 
@@ -105,7 +117,8 @@ Mitigation: ExifTool is invoked as an argument vector with `shell=False`, a fixe
 
 - A valid file may carry metadata in an unimplemented namespace or container.
 - Native parsers are custom code and should continue receiving malformed corpus/fuzz testing.
-- Optional third-party parser vulnerabilities remain part of the dependency attack surface.
+- Third-party parser vulnerabilities, including `pypdf` for PDF support and optional backends, remain part of the dependency attack surface.
 - C2PA cryptographic validation depends on optional c2pa-python; native structural recognition is not equivalent to signature validation.
 - Very large but budget-compliant files can still use substantial memory because the engine is not streaming.
-- Hidden OOXML content is inventory-only in 0.3.0 and is not claimed sanitized.
+- Hidden OOXML content is inventory-only and is not claimed sanitized.
+- PDF sanitization targets Info/XMP metadata only; it is not a content-disarm or active-content reconstruction guarantee.

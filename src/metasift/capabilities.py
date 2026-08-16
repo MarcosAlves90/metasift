@@ -39,8 +39,27 @@ _CAPABILITIES: dict[str, dict[str, Any]] = {
     "ooxml": {
         "inspect": "document-properties + hidden-content inventory",
         "sanitize": "core/custom-properties only",
+        "formats": "docx/docm/dotx/dotm; xlsx/xlsm/xlsb/xltx/xltm/xlam; pptx/pptm/potx/potm/ppsx/ppsm/ppam",
         "hidden_content_removal": False,
         "archive_budgets": True,
+    },
+    "json": {
+        "inspect": "field-level in explicit metadata containers",
+        "sanitize": "field-level metadata containers",
+        "metadata_containers": ["metadata", "_metadata", "_meta"],
+        "fidelity": "non-metadata JSON values preserved; formatting normalized only when mutation occurs",
+    },
+    "markdown": {
+        "inspect": "YAML/TOML front-matter field-level",
+        "sanitize": "front-matter field-level; metadata-max removes the complete front matter",
+        "fidelity": "Markdown body preserved byte-for-byte after UTF-8 decoding/encoding",
+    },
+    "pdf": {
+        "inspect": "Info dictionary + XMP field-level + signature inventory",
+        "sanitize": "Info dictionary + XMP rewrite",
+        "signed_documents": "fail-closed",
+        "encrypted_documents": "fail-closed",
+        "fidelity": "document objects/pages cloned; PDF container bytes are rewritten",
     },
     "mp3": {
         "inspect": "ID3 frame-level when mutagen is available",

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import ModuleType
 
-from .adapters import gif, generic, jpeg, mp3, ooxml, png, riff, webp
+from .adapters import gif, generic, jpeg, json_document, markdown, mp3, ooxml, pdf, png, riff, webp
 from .capabilities import capabilities_for
 from .io_utils import atomic_write, default_output_path
 from .models import CleanMode, CleanResult, InspectionReport, SanitizationPlan
@@ -17,6 +17,9 @@ _ADAPTERS: tuple[tuple[str, str, ModuleType], ...] = (
     ("riff", "RIFF", riff),
     ("gif", "GIF", gif),
     ("ooxml", "OOXML", ooxml),
+    ("pdf", "PDF", pdf),
+    ("json", "JSON", json_document),
+    ("markdown", "Markdown", markdown),
     ("mp3", "MP3", mp3),
 )
 
